@@ -1,0 +1,51 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: care_flow_erh_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - .:/app
+      - /app/node_modules
+    networks:
+      - care_flow_erh
+    command: npm run dev
+
+  mongo:
+    image: mongo:8.0
+    container_name: care_flow_erh_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DB}
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - care_flow_erh
+
+  redis:
+    image: redis:7-alpine
+    container_name: care_flow_erh_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - care_flow_erh
+
+networks:
+  care_flow_erh:
+    driver: bridge
+
+volumes:
+  mongo_data:
