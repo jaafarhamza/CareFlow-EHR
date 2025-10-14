@@ -8,6 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
+    "seed:users": "node src/seeds/user.seeder.js",
     "migrate:create": "npx migrate-mongo create -f ./src/config/migrate-mongo-config.js ",
     "migrate:up": "npx migrate-mongo up -f ./src/config/migrate-mongo-config.js",
     "migrate:down": "npx migrate-mongo down -f ./src/config/migrate-mongo-config.js",
@@ -29,8 +30,10 @@
     "nodemon": "^3.1.10"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "joi": "^17.13.3",
     "mongoose": "^8.19.1"
   }
 }
