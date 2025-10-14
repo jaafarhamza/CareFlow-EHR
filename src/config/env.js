@@ -1,4 +1,4 @@
-const dotenv = require("dotenv");
+import dotenv from "dotenv";
 
 const result = dotenv.config();
 
@@ -22,7 +22,7 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
-module.exports = {
+export default {
   NODE_ENV: process.env.NODE_ENV,
   PORT: parseInt(process.env.PORT, 10), // switch to number 
 
