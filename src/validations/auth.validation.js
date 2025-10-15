@@ -13,4 +13,19 @@ export const loginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
+export const requestResetSchema = Joi.object({
+  email: Joi.string().pattern(EMAIL_REGEX).lowercase().required(),
+});
+
+export const verifyResetSchema = Joi.object({
+  email: Joi.string().pattern(EMAIL_REGEX).lowercase().required(),
+  code: Joi.string().length(6).regex(/^\d{6}$/).required(),
+});
+
+export const applyResetSchema = Joi.object({
+  email: Joi.string().pattern(EMAIL_REGEX).lowercase().required(),
+  code: Joi.string().length(6).regex(/^\d{6}$/).required(),
+  newPassword: Joi.string().pattern(PASSWORD_REGEX).required(),
+});
+
 

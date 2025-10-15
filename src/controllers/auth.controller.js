@@ -1,5 +1,7 @@
-import { registerUser, loginUser, rotateRefreshToken, logoutUser, } from "../services/auth.service.js";
+import { registerUser, loginUser, rotateRefreshToken, logoutUser } from "../services/auth.service.js";
+import { requestPasswordReset, verifyPasswordResetCode, applyPasswordReset } from "../services/passwordReset.service.js";
 import { verifyRefreshToken } from "../utils/jwt.util.js";
+import { parseDurationMs } from "../utils/time.util.js";
 
 const cookieOpts = {
   httpOnly: true,
@@ -18,7 +20,7 @@ export default {
   login: async (req, res, next) => {
     try {
       const { user, accessToken, refreshToken } = await loginUser(req.body);
-      res.cookie("refreshToken", refreshToken, { ...cookieOpts, maxAge: parseCookieMaxAge(process.env.JWT_REFRESH_EXPIRES_IN) });
+      res.cookie("refreshToken", refreshToken, { ...cookieOpts, maxAge: parseDurationMs(process.env.JWT_REFRESH_EXPIRES_IN) });
       res.json({ success: true, data: { user, accessToken } });
     } catch (e) { next(e); }
   },
@@ -28,7 +30,7 @@ export default {
       if (!token) return res.status(401).json({ success: false, message: "Missing refresh token" });
       const payload = verifyRefreshToken(token, process.env.JWT_REFRESH_SECRET);
       const { accessToken, refreshToken } = await rotateRefreshToken(payload, token);
-      res.cookie("refreshToken", refreshToken, { ...cookieOpts, maxAge: parseCookieMaxAge(process.env.JWT_REFRESH_EXPIRES_IN) });
+      res.cookie("refreshToken", refreshToken, { ...cookieOpts, maxAge: parseDurationMs(process.env.JWT_REFRESH_EXPIRES_IN) });
       res.json({ success: true, data: { accessToken } });
     } catch (e) { e.status = e.status || 401; next(e); }
   },
@@ -40,16 +42,27 @@ export default {
       res.status(204).end();
     } catch (e) { next(e); }
   },
+  requestPassword: async (req, res, next) => {
+    try {
+      const result = await requestPasswordReset(req.body.email);
+      if (process.env.NODE_ENV) {
+        return res.json({ success: true, data: result });
+      }
+      res.status(204).end();
+    } catch (e) { next(e); }
+  },
+  verifyReset: async (req, res, next) => {
+    try {
+      const ok = await verifyPasswordResetCode(req.body.email, req.body.code);
+      res.json({ success: ok });
+    } catch (e) { next(e); }
+  },
+  applyReset: async (req, res, next) => {
+    try {
+      await applyPasswordReset(req.body.email, req.body.code, req.body.newPassword);
+      res.status(204).end();
+    } catch (e) { next(e); }
+  },
 };
-
-function parseCookieMaxAge(expr) {
-  const num = parseInt(expr, 10);
-  if (expr.endsWith("ms")) return num;
-  if (expr.endsWith("s")) return num * 1000;
-  if (expr.endsWith("m")) return num * 60 * 1000;
-  if (expr.endsWith("h")) return num * 60 * 60 * 1000;
-  if (expr.endsWith("d")) return num * 24 * 60 * 60 * 1000;
-  return num;
-}
 
 

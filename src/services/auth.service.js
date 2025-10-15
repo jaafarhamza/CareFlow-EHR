@@ -3,10 +3,10 @@ import userRepo from "../repositories/user.repository.js";
 import tokenRepo from "../repositories/refreshToken.repository.js";
 import { signAccessToken, signRefreshToken } from "../utils/jwt.util.js";
 import User from "../models/user.model.js";
+import { hashSha256 } from "../utils/crypto.util.js";
+import { parseDurationMs } from "../utils/time.util.js";
 
-function hashToken(token) {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
+function hashToken(token) { return hashSha256(token); }
 
 export async function registerUser(input) {
   const { firstName, lastName, email, password } = input;
@@ -37,7 +37,7 @@ export async function loginUser({ email, password }) {
   );
 
   const tokenHash = hashToken(rawRefresh);
-  const expiresAt = new Date(Date.now() + parseJwtExpiryMs(process.env.JWT_REFRESH_EXPIRES_IN));
+  const expiresAt = new Date(Date.now() + parseDurationMs(process.env.JWT_REFRESH_EXPIRES_IN));
   await tokenRepo.create({ userId: user.id, tokenHash, expiresAt });
 
   return { user: user.toSafeObject(), accessToken, refreshToken: rawRefresh };
@@ -65,7 +65,7 @@ export async function rotateRefreshToken(payload, rawToken) {
     crypto.randomUUID()
   );
   const newHash = hashToken(rawRefresh);
-  const expiresAt = new Date(Date.now() + parseJwtExpiryMs(process.env.JWT_REFRESH_EXPIRES_IN));
+  const expiresAt = new Date(Date.now() + parseDurationMs(process.env.JWT_REFRESH_EXPIRES_IN));
   await tokenRepo.revokeByHash(tokenHash, newHash);
   await tokenRepo.create({ userId: payload.sub, tokenHash: newHash, expiresAt });
 
@@ -75,16 +75,6 @@ export async function rotateRefreshToken(payload, rawToken) {
 export async function logoutUser(rawToken) {
   const tokenHash = hashToken(rawToken);
   await tokenRepo.revokeByHash(tokenHash);
-}
-
-function parseJwtExpiryMs(expr) {
-  const num = parseInt(expr, 10);
-  if (expr.endsWith("ms")) return num;
-  if (expr.endsWith("s")) return num * 1000;
-  if (expr.endsWith("m")) return num * 60 * 1000;
-  if (expr.endsWith("h")) return num * 60 * 60 * 1000;
-  if (expr.endsWith("d")) return num * 24 * 60 * 60 * 1000;
-  return num; // default ms
 }
 
 
