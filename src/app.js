@@ -1,12 +1,18 @@
 import express from "express";
+import cookieParser from "cookie-parser";
+import routes from "./routes/index.js";
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+if (process.env.NODE_ENV) {
+  app.set('trust proxy', 1);
+}
 
 //  test server
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({
     success: true,
     message: 'CareFlow-EHR API is running!',
@@ -14,6 +20,9 @@ app.get('/', (req, res) => {
     status: 'Server is working'
   });
 });
+
+// API routes
+app.use('/api', routes);
 
 //error handling 
 app.use((err, req, res, next) => {
