@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import userRepo from "../repositories/user.repository.js";
 import { hashSha256 } from "../utils/crypto.util.js";
 import { parseDurationMs } from "../utils/time.util.js";
+import config from "../config/index.js";
 
 export async function requestPasswordReset(email) {
   const user = await userRepo.findByEmailWithPassword(email);
@@ -14,7 +15,7 @@ export async function requestPasswordReset(email) {
   }
   const code = generateSixDigitCode();
   const resetCodeHash = hashSha256(code);
-  const expiresAt = new Date(Date.now() + parseDurationMs(process.env.PASSWORD_RESET_EXPIRES_IN || "15m"));
+  const expiresAt = new Date(Date.now() + parseDurationMs(config.passwordResetTtl));
   await User.updateOne(
     { _id: user._id },
     { $set: { resetCodeHash, resetCodeExpiresAt: expiresAt } },
@@ -23,7 +24,7 @@ export async function requestPasswordReset(email) {
   console.log(`[password reset] ${email} code: ${code} expires at ${expiresAt.toISOString()}`);
   return {
     sent: true,
-    code: process.env.NODE_ENV ? code : undefined,
+    code: config.env !== 'production' ? code : undefined,
     expiresAt,
   };
 }

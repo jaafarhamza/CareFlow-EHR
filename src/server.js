@@ -1,25 +1,43 @@
 import app from "./app.js";
 import connectDB from "./config/database.js";
+import config from "./config/index.js";
+import logger from "./config/logger.js";
 
-const PORT = process.env.PORT;
+const PORT = config.port;
 
 const startServer = async () => {
   try {
     await connectDB();
 
     const server = app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+      logger.info(`Server is running on port ${PORT}`);
     });
 
     server.on("error", (error) => {
-      console.error("Server error:", error);
+      logger.error("Server error:", error);
       process.exit(1);
     });
 
+    const shutdown = (signal) => {
+      logger.warn(`Received ${signal}. Shutting down gracefully...`);
+      server.close(() => {
+        logger.info("HTTP server closed");
+        process.exit(0);
+      });
+      // Force exit 
+      setTimeout(() => process.exit(1), 10000).unref();
+    };
+
     process.on("unhandledRejection", (err) => {
-      console.error("Unhandled Rejection:", err);
-      server.close(() => process.exit(1));
+      logger.error("Unhandled Rejection:", err);
+      shutdown("unhandledRejection");
     });
+    process.on("uncaughtException", (err) => {
+      logger.error("Uncaught Exception:", err);
+      shutdown("uncaughtException");
+    });
+    process.on("SIGINT", () => shutdown("SIGINT"));
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);

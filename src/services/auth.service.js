@@ -5,6 +5,7 @@ import { signAccessToken, signRefreshToken } from "../utils/jwt.util.js";
 import User from "../models/user.model.js";
 import { hashSha256 } from "../utils/crypto.util.js";
 import { parseDurationMs } from "../utils/time.util.js";
+import config from "../config/index.js";
 
 function hashToken(token) { return hashSha256(token); }
 
@@ -25,19 +26,19 @@ export async function loginUser({ email, password }) {
 
   const accessToken = signAccessToken(
     { sub: user.id, role: user.role },
-    process.env.JWT_ACCESS_SECRET,
-    process.env.JWT_ACCESS_EXPIRES_IN
+    config.jwt.accessSecret,
+    config.jwt.accessTtl
   );
 
   const rawRefresh = signRefreshToken(
     { sub: user.id },
-    process.env.JWT_REFRESH_SECRET,
-    process.env.JWT_REFRESH_EXPIRES_IN,
+    config.jwt.refreshSecret,
+    config.jwt.refreshTtl,
     crypto.randomUUID()
   );
 
   const tokenHash = hashToken(rawRefresh);
-  const expiresAt = new Date(Date.now() + parseDurationMs(process.env.JWT_REFRESH_EXPIRES_IN));
+  const expiresAt = new Date(Date.now() + parseDurationMs(config.jwt.refreshTtl));
   await tokenRepo.create({ userId: user.id, tokenHash, expiresAt });
 
   return { user: user.toSafeObject(), accessToken, refreshToken: rawRefresh };
@@ -54,18 +55,18 @@ export async function rotateRefreshToken(payload, rawToken) {
 
   const accessToken = signAccessToken(
     { sub: payload.sub },
-    process.env.JWT_ACCESS_SECRET,
-    process.env.JWT_ACCESS_EXPIRES_IN
+    config.jwt.accessSecret,
+    config.jwt.accessTtl
   );
 
   const rawRefresh = signRefreshToken(
     { sub: payload.sub },
-    process.env.JWT_REFRESH_SECRET,
-    process.env.JWT_REFRESH_EXPIRES_IN,
+    config.jwt.refreshSecret,
+    config.jwt.refreshTtl,
     crypto.randomUUID()
   );
   const newHash = hashToken(rawRefresh);
-  const expiresAt = new Date(Date.now() + parseDurationMs(process.env.JWT_REFRESH_EXPIRES_IN));
+  const expiresAt = new Date(Date.now() + parseDurationMs(config.jwt.refreshTtl));
   await tokenRepo.revokeByHash(tokenHash, newHash);
   await tokenRepo.create({ userId: payload.sub, tokenHash: newHash, expiresAt });
 

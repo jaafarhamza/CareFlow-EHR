@@ -2,12 +2,13 @@ import { registerUser, loginUser, rotateRefreshToken, logoutUser } from "../serv
 import { requestPasswordReset, verifyPasswordResetCode, applyPasswordReset } from "../services/passwordReset.service.js";
 import { verifyRefreshToken } from "../utils/jwt.util.js";
 import { parseDurationMs } from "../utils/time.util.js";
+import config from "../config/index.js";
 
 const cookieOpts = {
   httpOnly: true,
-  secure: process.env.NODE_ENV,
-  sameSite: "strict",
-  path: "/api/auth/refresh",
+  secure: config.cookie.secure,
+  sameSite: config.cookie.sameSite,
+  path: config.cookie.path,
 };
 
 export default {
@@ -20,7 +21,7 @@ export default {
   login: async (req, res, next) => {
     try {
       const { user, accessToken, refreshToken } = await loginUser(req.body);
-      res.cookie("refreshToken", refreshToken, { ...cookieOpts, maxAge: parseDurationMs(process.env.JWT_REFRESH_EXPIRES_IN) });
+      res.cookie("refreshToken", refreshToken, { ...cookieOpts, maxAge: parseDurationMs(config.jwt.refreshTtl) });
       res.json({ success: true, data: { user, accessToken } });
     } catch (e) { next(e); }
   },
@@ -28,9 +29,9 @@ export default {
     try {
       const token = req.cookies?.refreshToken;
       if (!token) return res.status(401).json({ success: false, message: "Missing refresh token" });
-      const payload = verifyRefreshToken(token, process.env.JWT_REFRESH_SECRET);
+      const payload = verifyRefreshToken(token, config.jwt.refreshSecret);
       const { accessToken, refreshToken } = await rotateRefreshToken(payload, token);
-      res.cookie("refreshToken", refreshToken, { ...cookieOpts, maxAge: parseDurationMs(process.env.JWT_REFRESH_EXPIRES_IN) });
+      res.cookie("refreshToken", refreshToken, { ...cookieOpts, maxAge: parseDurationMs(config.jwt.refreshTtl) });
       res.json({ success: true, data: { accessToken } });
     } catch (e) { e.status = e.status || 401; next(e); }
   },
@@ -45,7 +46,7 @@ export default {
   requestPassword: async (req, res, next) => {
     try {
       const result = await requestPasswordReset(req.body.email);
-      if (process.env.NODE_ENV) {
+      if (config.env !== 'production') {
         return res.json({ success: true, data: result });
       }
       res.status(204).end();
