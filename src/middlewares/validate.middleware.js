@@ -14,7 +14,13 @@ export default function validate(schema, property = "body") {
       });
     }
 
-    req[property] = value;
+    if (property === "query" || property === "params") {
+      const target = req[property] || {};
+      for (const key of Object.keys(target)) delete target[key];
+      Object.assign(target, value);
+    } else {
+      req[property] = value;
+    }
     next();
   };
 }

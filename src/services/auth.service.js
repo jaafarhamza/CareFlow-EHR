@@ -2,6 +2,7 @@ import crypto from "crypto";
 import userRepo from "../repositories/user.repository.js";
 import tokenRepo from "../repositories/refreshToken.repository.js";
 import { signAccessToken, signRefreshToken } from "../utils/jwt.util.js";
+import { USER_STATUSES } from "../utils/constants.js";
 import User from "../models/user.model.js";
 import { hashSha256 } from "../utils/crypto.util.js";
 import { parseDurationMs } from "../utils/time.util.js";
@@ -21,6 +22,12 @@ export async function loginUser({ email, password }) {
   if (!user || !(await user.comparePassword(password))) {
     const err = new Error("Invalid credentials");
     err.status = 401;
+    throw err;
+  }
+
+  if (user.status !== USER_STATUSES.ACTIVE || user.isActive === false) {
+    const err = new Error("Account is not active");
+    err.status = 403;
     throw err;
   }
 
@@ -50,6 +57,14 @@ export async function rotateRefreshToken(payload, rawToken) {
   if (!stored || stored.revokedAt) {
     const err = new Error("Invalid refresh token");
     err.status = 401;
+    throw err;
+  }
+
+  const user = await userRepo.findById(stored.userId);
+  if (!user || user.status !== USER_STATUSES.ACTIVE || user.isActive === false) {
+    await tokenRepo.revokeByHash(tokenHash);
+    const err = new Error("Account is not active");
+    err.status = 403;
     throw err;
   }
 

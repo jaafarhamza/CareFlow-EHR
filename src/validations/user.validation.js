@@ -2,8 +2,9 @@ import Joi from "joi";
 import { EMAIL_REGEX, PASSWORD_REGEX, PHONE_REGEX, ROLE_VALUES, USER_STATUS_VALUES } from "../utils/constants.js";
 
 const id = Joi.string().regex(/^[a-fA-F0-9]{24}$/).message("Invalid Mongo ObjectId");
-const firstName = Joi.string().min(2).max(100).trim();
-const lastName = Joi.string().min(2).max(100).trim();
+const nameNoDigits = /^[^\d]+$/; 
+const firstName = Joi.string().min(2).max(100).trim().pattern(nameNoDigits).message("First name must not contain digits");
+const lastName = Joi.string().min(2).max(100).trim().pattern(nameNoDigits).message("Last name must not contain digits");
 const email = Joi.string().trim().lowercase().pattern(EMAIL_REGEX).email();
 const phone = Joi.string().trim().pattern(PHONE_REGEX).optional();
 const role = Joi.string().valid(...ROLE_VALUES);

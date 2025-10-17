@@ -15,6 +15,12 @@ export default {
       { $set: { revokedAt: new Date(), replacedByTokenHash } }
     );
   },
+  async revokeAllByUserId(userId) {
+    await RefreshToken.updateMany(
+      { userId, revokedAt: { $exists: false } },
+      { $set: { revokedAt: new Date(), replacedByTokenHash: null } }
+    );
+  },
 };
 
 
