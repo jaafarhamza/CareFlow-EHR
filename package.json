@@ -10,6 +10,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed:users": "node src/seeds/user.seeder.js",
+    "seed:roles": "node src/seeds/roles.seeder.js",
     "migrate:create": "npx migrate-mongo create -f ./src/config/migrate-mongo-config.js ",
     "migrate:up": "npx migrate-mongo up -f ./src/config/migrate-mongo-config.js",
     "migrate:down": "npx migrate-mongo down -f ./src/config/migrate-mongo-config.js",

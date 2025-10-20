@@ -1,13 +1,15 @@
 import { Router } from "express";
 import validate from "../middlewares/validate.middleware.js";
-import { requireAuth, requireRoles } from "../middlewares/auth.middleware.js";
+import { requireAuth } from "../middlewares/auth.middleware.js";
+import { attachPermissions, requirePermissions } from "../middlewares/rbac.middleware.js";
 import userController from "../controllers/user.controller.js";
 import { createUserSchema, updateUserSchema, listUsersQuerySchema, getUserByIdSchema } from "../validations/user.validation.js";
+import { PERMISSIONS } from "../utils/constants.js";
 
 const router = Router();
 
 // Admin protected routes
-router.use(requireAuth, requireRoles());
+router.use(requireAuth, attachPermissions, requirePermissions(PERMISSIONS.USER_MANAGE));
 
 router.post("/", validate(createUserSchema), userController.create);
 router.get("/", validate(listUsersQuerySchema, "query"), userController.list);

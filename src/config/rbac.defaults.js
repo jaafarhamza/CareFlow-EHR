@@ -1,0 +1,60 @@
+import { ROLES, PERMISSIONS } from "../utils/constants.js";
+
+export const DEFAULT_ROLES = [
+  {
+    name: ROLES.ADMIN,
+    description: "System administrator",
+    permissions: [
+      PERMISSIONS.ROLE_MANAGE,
+      PERMISSIONS.USER_MANAGE,
+      PERMISSIONS.PATIENT_READ_ANY,
+      PERMISSIONS.PATIENT_WRITE_ANY,
+      PERMISSIONS.APPT_READ_ANY,
+      PERMISSIONS.APPT_WRITE_ANY,
+      PERMISSIONS.APPT_STATUS_COMPLETE,
+      PERMISSIONS.APPT_STATUS_CANCEL,
+      PERMISSIONS.AVAILABILITY_READ_ANY,
+    ],
+  },
+  {
+    name: ROLES.DOCTOR,
+    description: "Physician",
+    permissions: [
+      PERMISSIONS.PATIENT_READ_ANY,
+      PERMISSIONS.APPT_READ_ANY,
+      PERMISSIONS.APPT_WRITE_ANY,
+      PERMISSIONS.APPT_STATUS_COMPLETE,
+      PERMISSIONS.AVAILABILITY_READ_ANY,
+    ],
+  },
+  {
+    name: ROLES.NURSE,
+    description: "Nurse",
+    permissions: [
+      PERMISSIONS.PATIENT_READ_ANY,
+      PERMISSIONS.APPT_READ_ANY,
+      PERMISSIONS.APPT_WRITE_ANY,
+      PERMISSIONS.AVAILABILITY_READ_ANY,
+    ],
+  },
+  {
+    name: ROLES.SECRETARY,
+    description: "Clinic secretary",
+    permissions: [
+      PERMISSIONS.PATIENT_READ_ANY,
+      PERMISSIONS.APPT_READ_ANY,
+      PERMISSIONS.APPT_WRITE_ANY,
+      PERMISSIONS.AVAILABILITY_READ_ANY,
+    ],
+  },
+  {
+    name: ROLES.PATIENT,
+    description: "Patient",
+    permissions: [
+      PERMISSIONS.PATIENT_READ_SELF,
+      PERMISSIONS.PATIENT_WRITE_SELF,
+      PERMISSIONS.APPT_READ_SELF,
+      PERMISSIONS.APPT_WRITE_SELF,
+    ],
+  },
+];

@@ -22,4 +22,24 @@ export const USER_STATUSES = {
 
 export const USER_STATUS_VALUES = Object.values(USER_STATUSES);
 
+// general permissions
+export const PERMISSIONS = {
+  ROLE_MANAGE: "role:manage",
+  USER_MANAGE: "user:manage",
+
+  PATIENT_READ_ANY: "patient:read:any",
+  PATIENT_WRITE_ANY: "patient:write:any",
+  PATIENT_READ_SELF: "patient:read:self",
+  PATIENT_WRITE_SELF: "patient:write:self",
+
+  APPT_READ_ANY: "appt:read:any",
+  APPT_WRITE_ANY: "appt:write:any",
+  APPT_READ_SELF: "appt:read:self",
+  APPT_WRITE_SELF: "appt:write:self",
+  APPT_STATUS_COMPLETE: "appt:status:complete",
+  APPT_STATUS_CANCEL: "appt:status:cancel",
+
+  AVAILABILITY_READ_ANY: "availability:read:any",
+};
+
 
