@@ -1,99 +1,128 @@
-import userRepo from "../repositories/user.repository.js";
-import User from "../models/user.model.js";
-import { USER_STATUSES } from "../utils/constants.js";
-import tokenRepo from "../repositories/refreshToken.repository.js";
+import userRepo from '../repositories/user.repository.js';
+import User from '../models/user.model.js';
+import { USER_STATUSES } from '../utils/constants.js';
+import tokenRepo from '../repositories/refreshToken.repository.js';
+
+const ALLOWED_UPDATE_FIELDS = ['firstName', 'lastName', 'phone', 'role', 'status'];
+
+class UserError extends Error {
+  constructor(message, status) {
+    super(message);
+    this.status = status;
+  }
+}
 
 export async function adminCreateUser(input) {
-  const { firstName, lastName, email, phone = undefined, role, status, password } = input;
-  const exists = await userRepo.findOne({ email });
-  if (exists) {
-    const err = new Error("Email already in use");
-    err.status = 409;
-    throw err;
-  }
+  const { firstName, lastName, email, phone, role, status, password } = input;
+
   const passwordHash = await User.hashPassword(password);
-  const user = await userRepo.create({ firstName, lastName, email, passwordHash });
-  if (phone || role || status) {
-    user.phone = phone ?? user.phone;
-    if (role) user.role = role;
-    if (status) user.status = status;
-    await user.save();
+  
+  try {
+    const user = await userRepo.create({
+      firstName,
+      lastName,
+      email,
+      phone,
+      role,
+      status,
+      passwordHash
+    });
+    return user.toSafeObject();
+  } catch (error) {
+    if (error.code === 11000) {
+      throw new UserError('Email already in use', 409);
+    }
+    throw error;
   }
-  return user.toSafeObject();
 }
 
 export async function adminListUsers(params) {
-  const { page = 1, limit = 10, role, status, search, sortBy = "createdAt", sortOrder = "desc" } = params;
+  const { page = 1, limit = 10, role, status, search, sortBy = 'createdAt', sortOrder = 'desc' } = params;
+  
   const filter = userRepo.buildFilter({ role, status, search });
-  const sort = { [sortBy]: sortOrder === "asc" ? 1 : -1 };
+  const sort = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+  
   const result = await userRepo.list({ page, limit, filter, sort });
+  
   return {
     ...result,
-    items: result.items.map((u) => u.toSafeObject()),
+    items: result.items.map(u => u.toSafeObject())
   };
 }
 
 export async function adminGetUserProfile(id) {
   const user = await userRepo.findById(id);
-  if (!user) {
-    const err = new Error("User not found");
-    err.status = 404;
-    throw err;
-  }
+  if (!user) throw new UserError('User not found', 404);
   return user.toSafeObject();
 }
 
 export async function adminUpdateUser(id, input) {
-  const update = { ...input };
-  if (update.password) {
-    update.passwordHash = await User.hashPassword(update.password);
-    delete update.password;
+  const update = {};
+  
+  ALLOWED_UPDATE_FIELDS.forEach(field => {
+    if (input[field] !== undefined) {
+      update[field] = input[field];
+    }
+  });
+
+  if (input.password) {
+    update.passwordHash = await User.hashPassword(input.password);
   }
+
+  if (Object.keys(update).length === 0) {
+    throw new UserError('No valid fields to update', 400);
+  }
+
   const updated = await userRepo.updateById(id, update);
-  if (!updated) {
-    const err = new Error("User not found");
-    err.status = 404;
-    throw err;
-  }
+  if (!updated) throw new UserError('User not found', 404);
+  
   return updated.toSafeObject();
 }
 
 export async function adminSuspendUser(id) {
-  const updated = await userRepo.updateById(id, { status: USER_STATUSES.SUSPENDED, isActive: false });
-  if (!updated) {
-    const err = new Error("User not found");
-    err.status = 404;
-    throw err;
-  }
-  await tokenRepo.revokeAllByUserId(updated.id);
+  const updated = await userRepo.updateById(id, {
+    status: USER_STATUSES.SUSPENDED,
+    isActive: false
+  });
+  
+  if (!updated) throw new UserError('User not found', 404);
+  
+  await tokenRepo.revokeAllByUserId(id);
+  
   return updated.toSafeObject();
 }
 
 export async function adminReactivateUser(id) {
-  const updated = await userRepo.updateById(id, { status: USER_STATUSES.ACTIVE, isActive: true });
-  if (!updated) {
-    const err = new Error("User not found");
-    err.status = 404;
-    throw err;
+  const user = await userRepo.findById(id);
+  if (!user) throw new UserError('User not found', 404);
+  
+  if (user.status === USER_STATUSES.DELETED) {
+    throw new UserError('Cannot reactivate deleted user', 400);
   }
+
+  const updated = await userRepo.updateById(id, {
+    status: USER_STATUSES.ACTIVE,
+    isActive: true
+  });
+  
   return updated.toSafeObject();
 }
 
 export async function adminDeleteUser(id, actingUserId) {
   if (actingUserId && String(actingUserId) === String(id)) {
-    const err = new Error("Admins cannot delete their own account");
-    err.status = 400;
-    throw err;
+    throw new UserError('Cannot delete your own account', 400);
   }
-  const existing = await userRepo.findById(id);
-  if (!existing) {
-    const err = new Error("User not found");
-    err.status = 404;
-    throw err;
-  }
-  await tokenRepo.revokeAllByUserId(existing.id);
-  const deleted = await userRepo.deleteById(id);
-  return deleted ? deleted.toSafeObject() : null;
+
+  const user = await userRepo.findById(id);
+  if (!user) throw new UserError('User not found', 404);
+
+  const updated = await userRepo.updateById(id, {
+    status: USER_STATUSES.DELETED,
+    isActive: false,
+    email: `deleted_${Date.now()}_${user.email}`
+  });
+
+  await tokenRepo.revokeAllByUserId(id);
+  
+  return updated.toSafeObject();
 }
-
-
