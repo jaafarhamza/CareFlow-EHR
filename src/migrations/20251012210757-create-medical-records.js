@@ -1,52 +1,94 @@
-export
-  /**
-   * @param db {import('mongodb').Db}
-   * @param client {import('mongodb').MongoClient}
-   * @returns {Promise<void>}
-   */
-  async function up(db, client) {
-  // TODO write your migration here.
-  // See https://github.com/seppevs/migrate-mongo/#creating-a-new-migration-script
-  // Example:
-  // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: true}});
+export async function up(db) {
   await db.createCollection('medical_records', {
     validator: {
       $jsonSchema: {
         bsonType: 'object',
-        required: ['patientId', 'lastUpdated'],
+        required: ['patientId', 'createdAt'],
         properties: {
           patientId: { bsonType: 'objectId' },
-          allergies: { bsonType: 'array', items: { bsonType: 'string' } },
-          medicalHistory: { bsonType: 'array', items: { bsonType: 'string' } },
-          insurance: { bsonType: 'object' },
-          documents: { bsonType: 'array', items: { bsonType: 'object' } },
-          chronicConditions: { bsonType: ['array', 'null'], items: { bsonType: 'string' } },
-          immunizations: { bsonType: ['array', 'null'], items: { bsonType: 'string' } },
-          labResults: { bsonType: ['array', 'null'], items: { bsonType: 'object' } },
-          heightCm: { bsonType: ['double', 'int', 'null'] },
-          weightKg: { bsonType: ['double', 'int', 'null'] },
-          bloodType: { bsonType: ['string', 'null'] },
+          medicalHistory: {
+            bsonType: ['array', 'null'],
+            items: {
+              bsonType: 'object',
+              properties: {
+                condition: { bsonType: 'string' },
+                diagnosedAt: { bsonType: ['date', 'null'] },
+                notes: { bsonType: ['string', 'null'] }
+              }
+            }
+          },
+          surgicalHistory: {
+            bsonType: ['array', 'null'],
+            items: {
+              bsonType: 'object',
+              properties: {
+                procedure: { bsonType: 'string' },
+                date: { bsonType: ['date', 'null'] },
+                notes: { bsonType: ['string', 'null'] }
+              }
+            }
+          },
+          familyHistory: {
+            bsonType: ['array', 'null'],
+            items: {
+              bsonType: 'object',
+              properties: {
+                condition: { bsonType: 'string' },
+                relation: { bsonType: 'string' }
+              }
+            }
+          },
+          immunizations: {
+            bsonType: ['array', 'null'],
+            items: {
+              bsonType: 'object',
+              properties: {
+                vaccine: { bsonType: 'string' },
+                date: { bsonType: ['date', 'null'] },
+                nextDue: { bsonType: ['date', 'null'] }
+              }
+            }
+          },
+          labResults: {
+            bsonType: ['array', 'null'],
+            items: {
+              bsonType: 'object',
+              properties: {
+                testName: { bsonType: 'string' },
+                result: { bsonType: 'string' },
+                date: { bsonType: ['date', 'null'] },
+                orderedBy: { bsonType: ['objectId', 'null'] },
+                attachmentUrl: { bsonType: ['string', 'null'] }
+              }
+            }
+          },
+          documents: {
+            bsonType: ['array', 'null'],
+            items: {
+              bsonType: 'object',
+              properties: {
+                title: { bsonType: 'string' },
+                type: { bsonType: 'string' },
+                url: { bsonType: 'string' },
+                uploadedAt: { bsonType: 'date' },
+                uploadedBy: { bsonType: ['objectId', 'null'] }
+              }
+            }
+          },
           primaryPhysicianId: { bsonType: ['objectId', 'null'] },
-          lastUpdated: { bsonType: 'date' },
-          createdAt: { bsonType: ['date', 'null'] },
-          updatedAt: { bsonType: ['date', 'null'] },
           updatedBy: { bsonType: ['objectId', 'null'] },
-        },
-      },
-    },
+          createdAt: { bsonType: 'date' },
+          updatedAt: { bsonType: ['date', 'null'] }
+        }
+      }
+    }
   });
-  await db.collection('medical_records').createIndex({ patientId: 1 }, { unique: true });
-  await db.collection('medical_records').createIndex({ lastUpdated: 1 });
+
+  const records = db.collection('medical_records');
+  await records.createIndex({ patientId: 1 }, { unique: true });
+  await records.createIndex({ primaryPhysicianId: 1 });
 }
-export
-  /**
-   * @param db {import('mongodb').Db}
-   * @param client {import('mongodb').MongoClient}
-   * @returns {Promise<void>}
-   */
-  async function down(db, client) {
-  // TODO write the statements to rollback your migration (if possible)
-  // Example:
-  // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: false}});
+
+export async function down(db) {
   await db.collection('medical_records').drop();
 }

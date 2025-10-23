@@ -1,62 +1,44 @@
-export
-  /**
-   * @param db {import('mongodb').Db}
-   * @param client {import('mongodb').MongoClient}
-   * @returns {Promise<void>}
-   */
-  async function up(db, client) {
-  // TODO write your migration here.
-  // See https://github.com/seppevs/migrate-mongo/#creating-a-new-migration-script
-  // Example:
-  // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: true}});
+export async function up(db) {
   await db.createCollection('appointments', {
     validator: {
       $and: [
         {
           $jsonSchema: {
             bsonType: 'object',
-            required: ['patientId', 'doctorId', 'startAt', 'endAt', 'status', 'createdAt'],
+            required: ['patientId', 'doctorId', 'startAt', 'endAt', 'status', 'createdBy', 'createdAt'],
             properties: {
               patientId: { bsonType: 'objectId' },
               doctorId: { bsonType: 'objectId' },
               startAt: { bsonType: 'date' },
               endAt: { bsonType: 'date' },
-              status: { bsonType: 'string', enum: ['scheduled', 'completed', 'cancelled'] },
-              reason: { bsonType: 'string' },
-              locationId: { bsonType: ['objectId', 'null'] },
-              type: { bsonType: ['string', 'null'], enum: ['in_person', 'virtual', null] },
+              status: { enum: ['scheduled', 'completed', 'cancelled', 'no_show'] },
+              type: { enum: ['in_person', 'virtual', null] },
+              reason: { bsonType: ['string', 'null'] },
+              notes: { bsonType: ['string', 'null'] },
               meetingLink: { bsonType: ['string', 'null'] },
               cancellationReason: { bsonType: ['string', 'null'] },
               cancelledAt: { bsonType: ['date', 'null'] },
+              cancelledBy: { bsonType: ['objectId', 'null'] },
               completedAt: { bsonType: ['date', 'null'] },
+              reminderSentAt: { bsonType: ['date', 'null'] },
               createdBy: { bsonType: 'objectId' },
-              createdAt: { bsonType: 'date' },
-              updatedAt: { bsonType: ['date', 'null'] },
               updatedBy: { bsonType: ['objectId', 'null'] },
-            },
-          },
+              createdAt: { bsonType: 'date' },
+              updatedAt: { bsonType: ['date', 'null'] }
+            }
+          }
         },
         { $expr: { $lt: ['$startAt', '$endAt'] } }
-      ],
-    },
+      ]
+    }
   });
-  await db.collection('appointments').createIndex({ doctorId: 1, startAt: 1, endAt: 1 });
-  await db.collection('appointments').createIndex({ patientId: 1, startAt: 1 });
-  await db.collection('appointments').createIndex({ status: 1, startAt: 1 });
-  await db.collection('appointments').createIndex(
-    { doctorId: 1, startAt: 1, endAt: 1 },
-    { unique: true, partialFilterExpression: { status: 'scheduled' }, name: 'uniq_doctor_slot_scheduled' }
-  );
+
+  const appointments = db.collection('appointments');
+  await appointments.createIndex({ doctorId: 1, startAt: 1, status: 1 });
+  await appointments.createIndex({ patientId: 1, startAt: -1, status: 1 });
+  await appointments.createIndex({ status: 1, startAt: 1, reminderSentAt: 1 });
 }
-export
-  /**
-   * @param db {import('mongodb').Db}
-   * @param client {import('mongodb').MongoClient}
-   * @returns {Promise<void>}
-   */
-  async function down(db, client) {
-  // TODO write the statements to rollback your migration (if possible)
-  // Example:
-  // await db.collection('albums').updateOne({artist: 'The Beatles'}, {$set: {blacklisted: false}});
+
+export async function down(db) {
   await db.collection('appointments').drop();
 }
