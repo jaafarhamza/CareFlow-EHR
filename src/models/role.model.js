@@ -1,13 +1,39 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const roleSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, unique: true, index: true, trim: true },
-    permissions: { type: [String], default: [] },
-    description: { type: String, default: null },
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      minlength: 2,
+      maxlength: 50
+    },
+    permissions: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: function(arr) {
+          return arr.length === new Set(arr).size;
+        },
+        message: 'Duplicate permissions not allowed'
+      }
+    },
+    description: {
+      type: String,
+      default: null,
+      trim: true
+    },
+    isSystem: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true, versionKey: false }
 );
 
-const Role = mongoose.model("Role", roleSchema, "roles");
-export default Role;
+roleSchema.index({ name: 1 }, { unique: true });
+roleSchema.index({ isSystem: 1 });
+
+export default mongoose.model('Role', roleSchema);
