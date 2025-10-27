@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import userRepo from "../repositories/user.repository.js";
 import tokenRepo from "../repositories/refreshToken.repository.js";
+import patientRepo from "../repositories/patient.repository.js";
 import { signAccessToken, signRefreshToken } from "../utils/jwt.util.js";
 import User from "../models/user.model.js";
 import { hashSha256 } from "../utils/crypto.util.js";
@@ -8,13 +9,22 @@ import { parseDurationMs } from "../utils/time.util.js";
 import { validateAccountStatus } from "../utils/auth.util.js";
 import { AuthError, RateLimitError } from "../utils/errors.js";
 import { logAudit } from "./audit.service.js";
-import { AUDIT_ACTIONS } from "../utils/constants.js";
+import { AUDIT_ACTIONS, ROLES } from "../utils/constants.js";
 import config from "../config/index.js";
 
 export async function registerUser(input) {
   const { firstName, lastName, email, password } = input;
   const passwordHash = await User.hashPassword(password);
-  const user = await userRepo.create({ firstName, lastName, email, passwordHash });
+  const user = await userRepo.create({ firstName, lastName, email, passwordHash, role: ROLES.PATIENT });
+  
+  // Auto-create patient record for new users
+  try {
+    await patientRepo.create({ userId: user._id, createdBy: user._id });
+  } catch (error) {
+    // Log but don't fail registration if patient creation fails
+    console.error('Failed to create patient record:', error);
+  }
+  
   return user;
 }
 
@@ -41,6 +51,18 @@ export async function loginUser({ email, password }, deviceInfo = {}) {
 
   if (user.failedLoginAttempts > 0) {
     await user.resetLoginAttempts();
+  }
+
+  // Auto-create patient record if user is patient and doesn't have one
+  if (user.role === ROLES.PATIENT) {
+    const existingPatient = await patientRepo.findByUserId(user.id);
+    if (!existingPatient) {
+      try {
+        await patientRepo.create({ userId: user.id, createdBy: user.id });
+      } catch (error) {
+        console.error('Failed to create patient record on login:', error);
+      }
+    }
   }
 
   await userRepo.updateById(user.id, { lastLoginAt: new Date() });
