@@ -12,10 +12,23 @@ export function requireRoles(...allowedRoles) {
   };
 }
 
+const permissionsCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export async function attachPermissions(req, res, next) {
   try {
     if (!req.user?.role) return next();
+    
+    const cached = permissionsCache.get(req.user.role);
+    const isCacheValid = cached && (Date.now() - cached.timestamp) < CACHE_TTL;
+    
+    if (isCacheValid) {
+      req.user.permissions = new Set(cached.perms);
+      return next();
+    }
+    
     const perms = await rolesRepo.getPermissionsByName(req.user.role);
+    permissionsCache.set(req.user.role, { perms, timestamp: Date.now() });
     req.user.permissions = new Set(perms);
     next();
   } catch (e) {
@@ -25,14 +38,18 @@ export async function attachPermissions(req, res, next) {
 
 export function requirePermissions(...needed) {
   return async (req, res, next) => {
-    if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
-    if (!req.user.permissions) {
-      const perms = await rolesRepo.getPermissionsByName(req.user.role);
-      req.user.permissions = new Set(perms);
+    try {
+      if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
+      if (!req.user.permissions) {
+        const perms = await rolesRepo.getPermissionsByName(req.user.role);
+        req.user.permissions = new Set(perms);
+      }
+      const ok = needed.every((p) => req.user.permissions.has(p));
+      if (!ok) return res.status(403).json({ success: false, message: "Forbidden" });
+      next();
+    } catch (e) {
+      next(e);
     }
-    const ok = needed.every((p) => req.user.permissions.has(p));
-    if (!ok) return res.status(403).json({ success: false, message: "Forbidden" });
-    next();
   };
 }
 

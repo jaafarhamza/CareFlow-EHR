@@ -1,26 +1,25 @@
 import { verifyAccessToken } from "../utils/jwt.util.js";
+import userRepo from "../repositories/user.repository.js";
+import { validateAccountStatus } from "../utils/auth.util.js";
 import config from "../config/index.js";
-import { ROLES } from "../utils/constants.js";
 
-export function requireAuth(req, res, next) {
-  const header = req.headers.authorization || "";
-  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ success: false, message: "Missing token" });
+export async function requireAuth(req, res, next) {
   try {
-    req.user = verifyAccessToken(token, config.jwt.accessSecret);
+    const header = req.headers.authorization || "";
+    const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+    if (!token) return res.status(401).json({ success: false, message: "Missing token" });
+    
+    const payload = verifyAccessToken(token, config.jwt.accessSecret);
+    const user = await userRepo.findById(payload.sub);
+    
+    if (!user) return res.status(401).json({ success: false, message: "Invalid token" });
+    
+    validateAccountStatus(user);
+    if (user.isLocked) return res.status(401).json({ success: false, message: "Account locked" });
+    
+    req.user = { sub: user.id, role: user.role };
     next();
-  } catch {
+  } catch (error) {
     res.status(401).json({ success: false, message: "Invalid token" });
   }
-}
-
-export function requireRoles(...allowedRoles) {
-  const allowed = new Set(allowedRoles.length ? allowedRoles : [ROLES.ADMIN]);
-  return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ success: false, message: "Unauthorized" });
-    if (!req.user.role || !allowed.has(req.user.role)) {
-      return res.status(403).json({ success: false, message: "Forbidden" });
-    }
-    next();
-  };
 }

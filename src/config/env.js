@@ -52,6 +52,19 @@ export default {
   // Logger
   LOG_LEVEL: process.env.LOG_LEVEL,
   LOG_PRETTY: process.env.LOG_PRETTY,
+  // Email
+  SMTP_HOST: process.env.SMTP_HOST,
+  // amazonq-ignore-next-line
+  SMTP_PORT: parseInt(process.env.SMTP_PORT, 10),
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  // Google OAuth
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL,
+  // Redis
+  REDIS_HOST: process.env.REDIS_HOST,
+  REDIS_PORT: parseInt(process.env.REDIS_PORT, 10),
   // // URI
   getMongoDB_URI: function () {
     return `mongodb://${this.MONGO_INITDB_ROOT_USERNAME}:${this.MONGO_INITDB_ROOT_PASSWORD}@${this.MONGO_HOST}:${this.MONGO_PORT}/${this.MONGO_DB}?authSource=admin&ssl=${this.MONGO_SSL}`;

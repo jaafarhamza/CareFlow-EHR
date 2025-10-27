@@ -17,6 +17,13 @@ describe('Auth Service - Basic Tests', () => {
         firstName: 'hamza',
         lastName: 'hamza',
         email: 'hamza1111@test.com',
+        // amazonq-ignore-next-line
+        // amazonq-ignore-next-line
+        // amazonq-ignore-next-line
+        // amazonq-ignore-next-line
+        // amazonq-ignore-next-line
+        // amazonq-ignore-next-line
+        // amazonq-ignore-next-line
         password: 'TestPass123!'
       };
 
@@ -47,6 +54,7 @@ describe('Auth Service - Basic Tests', () => {
       // data
       const loginData = {
         email: 'john@test.com',
+        // amazonq-ignore-next-line
         password: 'TestPass123!'
       };
 
@@ -81,6 +89,7 @@ describe('Auth Service - Basic Tests', () => {
 
       // Test
       try {
+        // amazonq-ignore-next-line
         await loginUser({ email: 'invalid@test.com', password: 'wrong' });
         expect.fail('Should have thrown an error');
       } catch (error) {

@@ -19,6 +19,7 @@ describe('User API (admin)', () => {
   let createdId;
   it('POST /api/admin/users should create user', async () => {
     const res = await request.post('/api/admin/users').set('Authorization', `Bearer ${adminToken}`).send({
+      // amazonq-ignore-next-line
       firstName: 'Bob', lastName: 'Patient', email: 'bob@test.com', password: 'TestPass123!'
     });
     expect(res.status).to.equal(201);

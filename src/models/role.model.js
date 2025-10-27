@@ -5,7 +5,6 @@ const roleSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       minlength: 2,
       maxlength: 50
@@ -35,5 +34,6 @@ const roleSchema = new mongoose.Schema(
 
 roleSchema.index({ name: 1 }, { unique: true });
 roleSchema.index({ isSystem: 1 });
+roleSchema.set('autoIndex', false);
 
 export default mongoose.model('Role', roleSchema);

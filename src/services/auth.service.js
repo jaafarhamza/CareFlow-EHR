@@ -2,13 +2,14 @@ import crypto from "crypto";
 import userRepo from "../repositories/user.repository.js";
 import tokenRepo from "../repositories/refreshToken.repository.js";
 import { signAccessToken, signRefreshToken } from "../utils/jwt.util.js";
-import { USER_STATUSES } from "../utils/constants.js";
 import User from "../models/user.model.js";
 import { hashSha256 } from "../utils/crypto.util.js";
 import { parseDurationMs } from "../utils/time.util.js";
+import { validateAccountStatus } from "../utils/auth.util.js";
+import { AuthError, RateLimitError } from "../utils/errors.js";
+import { logAudit } from "./audit.service.js";
+import { AUDIT_ACTIONS } from "../utils/constants.js";
 import config from "../config/index.js";
-
-function hashToken(token) { return hashSha256(token); }
 
 export async function registerUser(input) {
   const { firstName, lastName, email, password } = input;
@@ -17,19 +18,33 @@ export async function registerUser(input) {
   return user;
 }
 
-export async function loginUser({ email, password }) {
+export async function loginUser({ email, password }, deviceInfo = {}) {
   const user = await userRepo.findByEmailWithPassword(email);
-  if (!user || !(await user.comparePassword(password))) {
-    const err = new Error("Invalid credentials");
-    err.status = 401;
-    throw err;
+  if (!user) {
+    await logAudit({ action: AUDIT_ACTIONS.LOGIN_FAILED, ...deviceInfo, metadata: { email } });
+    throw new AuthError('Invalid credentials');
   }
 
-  if (user.status !== USER_STATUSES.ACTIVE || user.isActive === false) {
-    const err = new Error("Account is not active");
-    err.status = 403;
-    throw err;
+  if (user.isLocked) {
+    await logAudit({ userId: user.id, action: AUDIT_ACTIONS.ACCOUNT_LOCKED, ...deviceInfo });
+    throw new RateLimitError('Account temporarily locked due to too many failed attempts');
   }
+
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) {
+    await user.incLoginAttempts();
+    await logAudit({ userId: user.id, action: AUDIT_ACTIONS.LOGIN_FAILED, ...deviceInfo, success: false });
+    throw new AuthError('Invalid credentials');
+  }
+
+  validateAccountStatus(user);
+
+  if (user.failedLoginAttempts > 0) {
+    await user.resetLoginAttempts();
+  }
+
+  await userRepo.updateById(user.id, { lastLoginAt: new Date() });
+  await logAudit({ userId: user.id, action: AUDIT_ACTIONS.LOGIN_SUCCESS, ...deviceInfo });
 
   const accessToken = signAccessToken(
     { sub: user.id, role: user.role },
@@ -44,28 +59,33 @@ export async function loginUser({ email, password }) {
     crypto.randomUUID()
   );
 
-  const tokenHash = hashToken(rawRefresh);
+  const tokenHash = hashSha256(rawRefresh);
   const expiresAt = new Date(Date.now() + parseDurationMs(config.jwt.refreshTtl));
-  await tokenRepo.create({ userId: user.id, tokenHash, expiresAt });
+  await tokenRepo.create({ 
+    userId: user.id, 
+    tokenHash, 
+    expiresAt,
+    ...deviceInfo
+  });
 
   return { user: user.toSafeObject(), accessToken, refreshToken: rawRefresh };
 }
 
-export async function rotateRefreshToken(payload, rawToken) {
-  const tokenHash = hashToken(rawToken);
+export async function rotateRefreshToken(payload, rawToken, deviceInfo = {}) {
+  const tokenHash = hashSha256(rawToken);
   const stored = await tokenRepo.findByTokenHash(tokenHash);
   if (!stored || stored.revokedAt) {
-    const err = new Error("Invalid refresh token");
-    err.status = 401;
-    throw err;
+    throw new AuthError('Invalid refresh token');
   }
 
   const user = await userRepo.findById(stored.userId);
-  if (!user || user.status !== USER_STATUSES.ACTIVE || user.isActive === false) {
+  if (!user) throw new AuthError('User not found');
+  
+  try {
+    validateAccountStatus(user);
+  } catch (error) {
     await tokenRepo.revokeByHash(tokenHash);
-    const err = new Error("Account is not active");
-    err.status = 403;
-    throw err;
+    throw error;
   }
 
   const accessToken = signAccessToken(
@@ -80,17 +100,27 @@ export async function rotateRefreshToken(payload, rawToken) {
     config.jwt.refreshTtl,
     crypto.randomUUID()
   );
-  const newHash = hashToken(rawRefresh);
+  const newHash = hashSha256(rawRefresh);
   const expiresAt = new Date(Date.now() + parseDurationMs(config.jwt.refreshTtl));
   await tokenRepo.revokeByHash(tokenHash, newHash);
-  await tokenRepo.create({ userId: payload.sub, tokenHash: newHash, expiresAt });
+  await tokenRepo.create({ 
+    userId: payload.sub, 
+    tokenHash: newHash, 
+    expiresAt,
+    ...deviceInfo
+  });
 
   return { accessToken, refreshToken: rawRefresh };
 }
 
-export async function logoutUser(rawToken) {
-  const tokenHash = hashToken(rawToken);
+export async function logoutUser(rawToken, deviceInfo = {}) {
+  const tokenHash = hashSha256(rawToken);
+  const stored = await tokenRepo.findByTokenHash(tokenHash);
   await tokenRepo.revokeByHash(tokenHash);
+  
+  if (stored?.userId) {
+    await logAudit({ userId: stored.userId, action: AUDIT_ACTIONS.LOGOUT, ...deviceInfo });
+  }
 }
 
 

@@ -41,14 +41,14 @@ export default {
 
     if (!status) {
       filter.status = { $ne: 'deleted' };
-    } else {
+    } else if (typeof status === 'string') {
       filter.status = status;
     }
 
-    if (role) filter.role = role;
+    if (role && typeof role === 'string') filter.role = role;
 
-    if (search) {
-      const searchTerm = search.trim();
+    if (search && typeof search === 'string') {
+      const searchTerm = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
         { firstName: { $regex: searchTerm, $options: 'i' } },
         { lastName: { $regex: searchTerm, $options: 'i' } },

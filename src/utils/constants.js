@@ -23,6 +23,25 @@ export const USER_STATUSES = {
 export const USER_STATUS_VALUES = Object.values(USER_STATUSES);
 
 // general permissions
+export const AUTH_CONFIG = {
+  MAX_LOGIN_ATTEMPTS: 5,
+  LOCK_TIME_MS: 15 * 60 * 1000,
+  RESET_CODE_LENGTH: 6,
+  RESET_SESSION_TTL: 15 * 60
+};
+
+export const SALT_ROUNDS = 10;
+
+export const AUDIT_ACTIONS = {
+  LOGIN_SUCCESS: 'login:success',
+  LOGIN_FAILED: 'login:failed',
+  LOGOUT: 'logout',
+  PASSWORD_RESET_REQUEST: 'password:reset:request',
+  PASSWORD_RESET_COMPLETE: 'password:reset:complete',
+  TOKEN_REFRESH: 'token:refresh',
+  ACCOUNT_LOCKED: 'account:locked'
+};
+
 export const PERMISSIONS = {
   ROLE_MANAGE: "role:manage",
   USER_MANAGE: "user:manage",

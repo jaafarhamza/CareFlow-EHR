@@ -17,8 +17,8 @@ export default {
   },
   async revokeAllByUserId(userId) {
     await RefreshToken.updateMany(
-      { userId, revokedAt: { $exists: false } },
-      { $set: { revokedAt: new Date(), replacedByTokenHash: null } }
+      { userId, revokedAt: null },
+      { $set: { revokedAt: new Date() } }
     );
   },
 };

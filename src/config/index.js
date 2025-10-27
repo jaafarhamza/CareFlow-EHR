@@ -32,11 +32,22 @@ const config = {
   cookie: {
     secure: toBool(env.COOKIE_SECURE ?? isProduction),
     sameSite: isProduction ? "none" : "lax",
-    path: "/api/auth/refresh",
+    path: "/api/auth",
   },
   log: {
     level: (env.LOG_LEVEL || (isProduction ? "info" : "debug")).toLowerCase(),
     pretty: toBool(env.LOG_PRETTY || !isProduction),
+  },
+  smtp: {
+    host: env.SMTP_HOST,
+    port: toNumber(env.SMTP_PORT, 587),
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASS,
+  },
+  google: {
+    clientId: env.GOOGLE_CLIENT_ID,
+    clientSecret: env.GOOGLE_CLIENT_SECRET,
+    callbackUrl: env.GOOGLE_CALLBACK_URL,
   },
 };
 

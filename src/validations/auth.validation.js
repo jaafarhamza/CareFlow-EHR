@@ -20,14 +20,15 @@ export const requestResetSchema = Joi.object({
 });
 
 export const verifyResetSchema = Joi.object({
-  email: Joi.string().pattern(EMAIL_REGEX).lowercase().required(),
   code: Joi.string().length(6).regex(/^\d{6}$/).required(),
 });
 
 export const applyResetSchema = Joi.object({
-  email: Joi.string().pattern(EMAIL_REGEX).lowercase().required(),
   code: Joi.string().length(6).regex(/^\d{6}$/).required(),
   newPassword: Joi.string().pattern(PASSWORD_REGEX).required(),
+  confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
+    'any.only': 'Passwords do not match'
+  }),
 });
 
 

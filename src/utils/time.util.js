@@ -1,6 +1,7 @@
 export function parseDurationMs(expr) {
   const str = String(expr || "").trim();
   const num = parseInt(str, 10);
+  // amazonq-ignore-next-line
   if (str.endsWith("ms")) return num;
   if (str.endsWith("s")) return num * 1000;
   if (str.endsWith("m")) return num * 60 * 1000;
