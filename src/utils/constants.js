@@ -51,6 +51,11 @@ export const PERMISSIONS = {
   PATIENT_READ_SELF: "patient:read:self",
   PATIENT_WRITE_SELF: "patient:write:self",
 
+  DOCTOR_READ_ANY: "doctor:read:any",
+  DOCTOR_WRITE_ANY: "doctor:write:any",
+  DOCTOR_READ_SELF: "doctor:read:self",
+  DOCTOR_WRITE_SELF: "doctor:write:self",
+
   APPT_READ_ANY: "appt:read:any",
   APPT_WRITE_ANY: "appt:write:any",
   APPT_READ_SELF: "appt:read:self",
