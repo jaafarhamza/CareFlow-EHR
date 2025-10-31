@@ -65,7 +65,18 @@ export default {
   // Redis
   REDIS_HOST: process.env.REDIS_HOST,
   REDIS_PORT: parseInt(process.env.REDIS_PORT, 10),
-  // // URI
+  // MinIO Storage
+  MINIO_ENDPOINT: process.env.MINIO_ENDPOINT,
+  MINIO_PORT: parseInt(process.env.MINIO_PORT, 10),
+  MINIO_ROOT_USER: process.env.MINIO_ROOT_USER,
+  MINIO_ROOT_PASSWORD: process.env.MINIO_ROOT_PASSWORD,
+  MINIO_BUCKET_NAME: process.env.MINIO_BUCKET_NAME,
+  MINIO_USE_SSL: process.env.MINIO_USE_SSL,
+  // Storage Settings
+  MAX_FILE_SIZE: parseInt(process.env.MAX_FILE_SIZE, 10),
+  PRESIGNED_URL_EXPIRY: parseInt(process.env.PRESIGNED_URL_EXPIRY, 10),
+
+  // URI
   getMongoDB_URI: function () {
     return `mongodb://${this.MONGO_INITDB_ROOT_USERNAME}:${this.MONGO_INITDB_ROOT_PASSWORD}@${this.MONGO_HOST}:${this.MONGO_PORT}/${this.MONGO_DB}?authSource=admin&ssl=${this.MONGO_SSL}`;
   },

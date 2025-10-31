@@ -4,6 +4,8 @@ export const ROLES = {
   PATIENT: "patient",
   NURSE: "nurse",
   SECRETARY: "secretary",
+  PHARMACIST: "pharmacist",
+  LAB_TECHNICIAN: "lab_technician",
 };
 
 export const ROLE_VALUES = Object.values(ROLES);
@@ -64,6 +66,40 @@ export const PERMISSIONS = {
   APPT_STATUS_CANCEL: "appt:status:cancel",
 
   AVAILABILITY_READ_ANY: "availability:read:any",
+
+  // Consultation permissions
+  CONSULTATION_READ_ANY: "consultation:read:any",
+  CONSULTATION_WRITE_ANY: "consultation:write:any",
+  CONSULTATION_READ_SELF: "consultation:read:self",
+
+  // Prescription permissions
+  PRESCRIPTION_READ_ANY: "prescription:read:any",
+  PRESCRIPTION_WRITE_ANY: "prescription:write:any",
+  PRESCRIPTION_READ_SELF: "prescription:read:self",
+  PRESCRIPTION_SIGN: "prescription:sign",
+  PRESCRIPTION_DISPENSE: "prescription:dispense",
+
+  // Pharmacy permissions
+  PHARMACY_MANAGE: "pharmacy:manage",
+  PHARMACY_READ_ANY: "pharmacy:read:any",
+  PHARMACY_PRESCRIPTIONS: "pharmacy:prescriptions",
+
+  // Laboratory permissions
+  LAB_ORDER_READ_ANY: "lab:order:read:any",
+  LAB_ORDER_WRITE_ANY: "lab:order:write:any",
+  LAB_ORDER_READ_SELF: "lab:order:read:self",
+  LAB_RESULT_READ_ANY: "lab:result:read:any",
+  LAB_RESULT_WRITE_ANY: "lab:result:write:any",
+  LAB_RESULT_READ_SELF: "lab:result:read:self",
+  LAB_RESULT_VALIDATE: "lab:result:validate",
+
+  // Document permissions
+  DOCUMENT_READ_ANY: "document:read:any",
+  DOCUMENT_WRITE_ANY: "document:write:any",
+  DOCUMENT_READ_SELF: "document:read:self",
+  DOCUMENT_WRITE_SELF: "document:write:self",
+  DOCUMENT_DELETE: "document:delete",
+  DOCUMENT_VERIFY: "document:verify",
 };
 
 

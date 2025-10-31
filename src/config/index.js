@@ -49,6 +49,16 @@ const config = {
     clientSecret: env.GOOGLE_CLIENT_SECRET,
     callbackUrl: env.GOOGLE_CALLBACK_URL,
   },
+  storage: {
+    maxFileSize: toNumber(env.MAX_FILE_SIZE, 20971520), // 20MB default
+    presignedUrlExpiry: toNumber(env.PRESIGNED_URL_EXPIRY, 600), // 10 minutes default
+    endpoint: env.MINIO_ENDPOINT,
+    port: toNumber(env.MINIO_PORT),
+    accessKey: env.MINIO_ROOT_USER,
+    secretKey: env.MINIO_ROOT_PASSWORD,
+    bucketName: env.MINIO_BUCKET_NAME,
+    useSSL: toBool(env.MINIO_USE_SSL)
+  },
 };
 
 export default config;

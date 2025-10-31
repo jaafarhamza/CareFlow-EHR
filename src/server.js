@@ -3,12 +3,22 @@ import connectDB from "./config/database.js";
 import config from "./config/index.js";
 import logger from "./config/logger.js";
 import { startReminderJob } from "./jobs/reminder.job.js";
+import storageService from "./services/storage.service.js";
 
 const PORT = config.port;
 
 const startServer = async () => {
   try {
     await connectDB();
+
+    // Initialize storage (create bucket if needed)
+    try {
+      await storageService.initialize();
+      logger.info('Storage service initialized successfully');
+    } catch (error) {
+      logger.error('Failed to initialize storage service:', error);
+      logger.warn('Server will continue but file uploads may not work');
+    }
 
     const server = app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
