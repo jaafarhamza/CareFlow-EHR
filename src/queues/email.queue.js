@@ -1,5 +1,5 @@
 import Queue from 'bull';
-import { sendPasswordResetEmail } from '../services/email.service.js';
+import { sendPasswordResetEmail, sendAppointmentReminderEmail } from '../services/email.service.js';
 import logger from '../config/logger.js';
 import env from '../config/env.js';
 
@@ -26,7 +26,7 @@ emailQueue.process(async (job) => {
         break;
       
       case 'appointment-reminder':
-        logger.info(`Appointment reminder sent to ${data.email}`);
+        await sendAppointmentReminderEmail(data);
         break;
       
       default:

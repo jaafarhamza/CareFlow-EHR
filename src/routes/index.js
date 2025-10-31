@@ -7,6 +7,7 @@ import roleRoutes from "./role.routes.js";
 import patientRoutes from "./patient.routes.js";
 import doctorRoutes from "./doctor.routes.js";
 import appointmentRoutes from "./appointment.routes.js";
+import testRoutes from "./test.routes.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.use("/admin/roles", roleRoutes);
 router.use("/patients", patientRoutes);
 router.use("/doctors", doctorRoutes);
 router.use("/appointments", appointmentRoutes);
+router.use("/test", testRoutes);  // Test endpoints (remove in production)
 
 export default router;
 

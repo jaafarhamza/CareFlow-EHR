@@ -154,6 +154,48 @@ class AppointmentRepository {
 
     return filter;
   }
+
+  async findPendingReminders(startWindow, endWindow) {
+    const appointments = await Appointment.find({
+      status: 'scheduled',
+      startAt: {
+        $gte: startWindow,
+        $lte: endWindow
+      },
+      reminderSentAt: null
+    })
+      .populate({
+        path: 'patientId',
+        populate: { path: 'userId', select: 'firstName lastName email' }
+      })
+      .populate({
+        path: 'doctorId',
+        populate: { path: 'userId', select: 'firstName lastName' }
+      })
+      .sort({ startAt: 1 });
+
+    // Debug: Log what we found
+    console.log(`Found ${appointments.length} appointments in reminder window`);
+    appointments.forEach(apt => {
+      console.log('Appointment:', {
+        id: apt._id,
+        patientId: apt.patientId?._id,
+        patientUserId: apt.patientId?.userId?._id,
+        patientEmail: apt.patientId?.userId?.email,
+        doctorId: apt.doctorId?._id
+      });
+    });
+
+    return appointments;
+  }
+
+  async markReminderSent(appointmentId) {
+    return Appointment.findByIdAndUpdate(
+      appointmentId,
+      { reminderSentAt: new Date() },
+      { new: true }
+    );
+  }
 }
 
 export default new AppointmentRepository();

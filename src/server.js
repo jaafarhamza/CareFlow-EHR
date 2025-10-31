@@ -2,6 +2,7 @@ import app from "./app.js";
 import connectDB from "./config/database.js";
 import config from "./config/index.js";
 import logger from "./config/logger.js";
+import { startReminderJob } from "./jobs/reminder.job.js";
 
 const PORT = config.port;
 
@@ -11,6 +12,14 @@ const startServer = async () => {
 
     const server = app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
+      
+      // Start appointment reminder
+      try {
+        startReminderJob();
+        logger.info('Reminder job started successfully');
+      } catch (error) {
+        logger.error('Failed to start reminder job:', error);
+      }
     });
 
     server.on("error", (error) => {
