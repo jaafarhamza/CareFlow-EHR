@@ -6,6 +6,7 @@ import userRoutes from "./user.routes.js";
 import roleRoutes from "./role.routes.js";
 import patientRoutes from "./patient.routes.js";
 import doctorRoutes from "./doctor.routes.js";
+import appointmentRoutes from "./appointment.routes.js";
 
 const router = Router();
 
@@ -15,6 +16,7 @@ router.use("/admin/users", userRoutes);
 router.use("/admin/roles", roleRoutes);
 router.use("/patients", patientRoutes);
 router.use("/doctors", doctorRoutes);
+router.use("/appointments", appointmentRoutes);
 
 export default router;
 

@@ -10,8 +10,7 @@ const doctorSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
-      unique: true
+      required: true
     },
     specialization: {
       type: String,
@@ -21,7 +20,6 @@ const doctorSchema = new mongoose.Schema(
     licenseNumber: {
       type: String,
       required: true,
-      unique: true,
       trim: true
     },
     department: {

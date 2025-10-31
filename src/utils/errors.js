@@ -36,3 +36,9 @@ export class RateLimitError extends AppError {
     super(message, status);
   }
 }
+
+export class ConflictError extends AppError {
+  constructor(message = 'Resource conflict', status = 409) {
+    super(message, status);
+  }
+}

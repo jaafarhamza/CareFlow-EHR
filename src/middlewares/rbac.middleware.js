@@ -44,7 +44,8 @@ export function requirePermissions(...needed) {
         const perms = await rolesRepo.getPermissionsByName(req.user.role);
         req.user.permissions = new Set(perms);
       }
-      const ok = needed.every((p) => req.user.permissions.has(p));
+      // User needs at least ONE of the required permissions (OR logic)
+      const ok = needed.some((p) => req.user.permissions.has(p));
       if (!ok) return res.status(403).json({ success: false, message: "Forbidden" });
       next();
     } catch (e) {
