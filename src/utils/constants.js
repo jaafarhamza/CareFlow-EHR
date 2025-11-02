@@ -80,8 +80,9 @@ export const PERMISSIONS = {
   PRESCRIPTION_DISPENSE: "prescription:dispense",
 
   // Pharmacy permissions
-  PHARMACY_MANAGE: "pharmacy:manage",
   PHARMACY_READ_ANY: "pharmacy:read:any",
+  PHARMACY_WRITE_ANY: "pharmacy:write:any",
+  PHARMACY_MANAGE: "pharmacy:manage",
   PHARMACY_PRESCRIPTIONS: "pharmacy:prescriptions",
 
   // Laboratory permissions

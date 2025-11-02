@@ -50,7 +50,11 @@ const systemRoles = [
       PERMISSIONS.DOCTOR_READ_ANY,
       PERMISSIONS.APPT_READ_ANY,
       PERMISSIONS.APPT_WRITE_ANY,
-      PERMISSIONS.AVAILABILITY_READ_ANY
+      PERMISSIONS.AVAILABILITY_READ_ANY,
+      PERMISSIONS.CONSULTATION_READ_ANY,
+      PERMISSIONS.PRESCRIPTION_READ_ANY,
+      PERMISSIONS.PRESCRIPTION_WRITE_ANY,
+      PERMISSIONS.PHARMACY_READ_ANY
     ],
     description: 'Nursing staff access'
   },
@@ -91,6 +95,8 @@ const systemRoles = [
     isSystem: true,
     permissions: [
       PERMISSIONS.PHARMACY_READ_ANY,
+      PERMISSIONS.PHARMACY_WRITE_ANY,
+      PERMISSIONS.PHARMACY_MANAGE,
       PERMISSIONS.PHARMACY_PRESCRIPTIONS,
       PERMISSIONS.PRESCRIPTION_READ_ANY,
       PERMISSIONS.PRESCRIPTION_DISPENSE,
@@ -117,21 +123,25 @@ const systemRoles = [
   }
 ];
 
-async function seedRoles() {
+export async function seedRoles() {
   try {
-    await mongoose.connect(env.getMongoDB_URI());
-    logger.info('Connected to MongoDB');
-
     await roleRepo.upsertMany(systemRoles);
     logger.info(`✅ Seeded ${systemRoles.length} system roles`);
-
-    await mongoose.disconnect();
-    logger.info('Disconnected from MongoDB');
-    process.exit(0);
+    return systemRoles;
   } catch (error) {
     logger.error('Error seeding roles:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
-seedRoles();
+// Run seeder if called directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  await mongoose.connect(env.getMongoDB_URI());
+  logger.info('Connected to MongoDB');
+  
+  await seedRoles();
+  
+  await mongoose.disconnect();
+  logger.info('Disconnected from MongoDB');
+  process.exit(0);
+}
