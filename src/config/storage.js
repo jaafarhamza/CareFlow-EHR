@@ -5,6 +5,7 @@ const storageConfig = {
   maxFileSize: config.storage.maxFileSize,
   presignedUrlExpiry: config.storage.presignedUrlExpiry,
   endpoint: config.storage.endpoint,
+  publicEndpoint: config.storage.publicEndpoint,
   port: config.storage.port,
   accessKey: config.storage.accessKey,
   secretKey: config.storage.secretKey,
@@ -49,10 +50,21 @@ const s3Client = new S3Client({
   forcePathStyle: true // Required for MinIO
 });
 
+// Create S3 Client for presigned URLs - uses public endpoint
+const s3ClientPublic = new S3Client({
+  endpoint: `http${storageConfig.useSSL ? 's' : ''}://${storageConfig.publicEndpoint}:${storageConfig.port}`,
+  region: 'us-east-1',
+  credentials: {
+    accessKeyId: storageConfig.accessKey,
+    secretAccessKey: storageConfig.secretKey
+  },
+  forcePathStyle: true
+});
+
 // Get bucket name
 const getBucketName = () => {
   return storageConfig.bucketName;
 };
 
-export { s3Client, storageConfig, getBucketName };
+export { s3Client, s3ClientPublic, storageConfig, getBucketName };
 export default storageConfig;

@@ -68,6 +68,7 @@ export default {
   // MinIO Storage
   MINIO_ENDPOINT: process.env.MINIO_ENDPOINT,
   MINIO_PORT: parseInt(process.env.MINIO_PORT, 10),
+  MINIO_PUBLIC_ENDPOINT: process.env.MINIO_PUBLIC_ENDPOINT,
   MINIO_ROOT_USER: process.env.MINIO_ROOT_USER,
   MINIO_ROOT_PASSWORD: process.env.MINIO_ROOT_PASSWORD,
   MINIO_BUCKET_NAME: process.env.MINIO_BUCKET_NAME,

@@ -12,6 +12,7 @@ import prescriptionRoutes from "./prescription.routes.js";
 import pharmacyRoutes from "./pharmacy.routes.js";
 import labOrderRoutes from "./labOrder.routes.js";
 import labResultRoutes from "./labResult.routes.js";
+import documentRoutes from "./document.routes.js";
 import testRoutes from "./test.routes.js";
 
 const router = Router();
@@ -28,6 +29,7 @@ router.use("/prescriptions", prescriptionRoutes);
 router.use("/pharmacies", pharmacyRoutes);
 router.use("/lab-orders", labOrderRoutes);
 router.use("/lab-results", labResultRoutes);
+router.use("/documents", documentRoutes);
 router.use("/test", testRoutes);  // Test endpoints 
 export default router;
 

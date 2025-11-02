@@ -232,7 +232,7 @@ class LabResultService {
     }
 
     // Upload file to storage
-    const uploadedFile = await storageService.uploadFile(file, 'lab-reports');
+    const uploadedFile = await storageService.uploadMulterFile(file, 'lab-reports');
 
     // Attach PDF to result
     labResult.attachPdfReport({

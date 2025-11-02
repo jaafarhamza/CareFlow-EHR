@@ -53,6 +53,7 @@ const config = {
     maxFileSize: toNumber(env.MAX_FILE_SIZE, 20971520), // 20MB default
     presignedUrlExpiry: toNumber(env.PRESIGNED_URL_EXPIRY, 600), // 10 minutes default
     endpoint: env.MINIO_ENDPOINT,
+    publicEndpoint: env.MINIO_PUBLIC_ENDPOINT,
     port: toNumber(env.MINIO_PORT),
     accessKey: env.MINIO_ROOT_USER,
     secretKey: env.MINIO_ROOT_PASSWORD,
